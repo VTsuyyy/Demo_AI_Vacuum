@@ -85,18 +85,18 @@ def find_path_to_closest_goal(matrix, start, goals):
     return path
 
 # Sử dụng:
-goals = [(4, 4), (2, 2), (3, 3)]  # Danh sách các vị trí hạt bụi
+#goals = [(4, 4), (2, 2), (3, 3)]  # Danh sách các vị trí hạt bụi
 
 
 
 # Ví dụ sử dụng:
-matrix = [[0, 0, 0, 0, 0],  # 0 là đường đi, 1 là vật cản
-          [0, 1, 1, 1, 0],
-          [0, 0, 0, 0, 0],
-          [0, 1, 1, 1, 0],
-          [0, 0, 0, 0, 0]]
+# matrix = [[0, 0, 0, 0, 0],  # 0 là đường đi, 1 là vật cản
+#           [0, 1, 1, 1, 0],
+#           [0, 0, 0, 0, 0],
+#           [0, 1, 1, 1, 0],
+#           [0, 0, 0, 0, 0]]
 
-start = (0, 0)  # Vị trí xuất phát
-goals = [(4, 4), (2, 2), (3, 3)]   # Vị trí đích
-path_to_goals = find_path_to_closest_goal(matrix, start, goals)
-print(path_to_goals)
+# start = (0, 0)  # Vị trí xuất phát
+# goals = [(4, 4), (2, 2), (3, 3)]   # Vị trí đích
+# path_to_goals = find_path_to_closest_goal(matrix, start, goals)
+# print(path_to_goals)
