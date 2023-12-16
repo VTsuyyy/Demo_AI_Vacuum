@@ -31,7 +31,8 @@ def random_matrix (num_rows, num_cols,num_obs,num_dust):
     for pos in dust_and_vacuum_positions:
         arr[pos] = 2
 
-    start_position = (vacuum_position // num_cols , vacuum_position % num_cols)
+    start_position = [vacuum_position // num_cols , vacuum_position % num_cols]
+    # start_position = [3, 3]
 
     matrix = [arr[i * num_cols:(i + 1) * num_cols] for i in range(num_rows)]
 
@@ -69,7 +70,7 @@ def create_table():
     
     for i in range(num_rows):
         for j in range(num_cols):
-            if (i, j) == vacuum_pos:
+            if [i, j] == vacuum_pos:
                 image = vacuum_image
             elif (i, j) in obstacle_positions:
                 image = wall_image
@@ -81,13 +82,38 @@ def create_table():
             cell_label = tk.Label(table_frame, image=image, borderwidth=0.5, relief='groove', width=50, height=50, bg='lightblue')
             cell_label.image = image
             cell_label.grid(row=i, column=j, padx=5, pady=5)
+            cell_label.bind('<Button-1>', lambda onRightClick, row=i, col=j: update_vacuum_position(row, col))
+            cell_label.bind('<Button-2>', lambda onRightClick, row=i, col=j: up_wall(row, col))
+            cell_label.bind('<Button-3>', lambda onRightClick, row=i, col=j: up_virus(row, col))
             
 def update_cell(row, col, image):
     # Tìm widget Label tương ứng và cập nhật hình ảnh
     cell_label = table_frame.grid_slaves(row=row, column=col)[0]
     cell_label.config(image=image)
     cell_label.image = image
+
+
+def up_wall(r, c):
+    global table_frame
+    result['matrix'][r][c] = 1
+    new_label = tk.Label(table_frame, image=wall_image, borderwidth=0.5, relief='groove', width=50, height=50, bg='lightblue')
+    # new_label.image = dust_image
+    new_label.grid(row=r, column=c, padx=5, pady=5)
     
+def up_virus(r, c):
+    global table_frame, dust_image
+    result['matrix'][r][c] = 2
+    new_label = tk.Label(table_frame, image=dust_image, borderwidth=0.5, relief='groove', width=50, height=50, bg='lightblue')
+    # new_label.image = dust_image
+    new_label.grid(row=r, column=c, padx=5, pady=5)
+    
+def update_vacuum_position(new_row, new_col):
+    global  result
+    update_cell( result['start_position'][0], result['start_position'][1], bg_image)
+    result['start_position'][0] = new_row
+    result['start_position'][1] = new_col
+    update_cell( result['start_position'][0], result['start_position'][1], vacuum_image)
+
 def move_vacuum(old_x, old_y, new_x, new_y):
     global vacuum_pos
     # Cập nhật vị trí máy hút bụi mới
@@ -117,7 +143,7 @@ def clean_grid(aaa):
             # Tính toán đường đi bằng A*
             #start_pos_tuple = tuple(vacuum_pos.values())
             vacuum_pos = result['start_position']
-            path = find_path_to_closest_goal(result['matrix'], vacuum_pos  , dust_positions)
+            path = find_path_to_closest_goal(result['matrix'], (vacuum_pos[0], vacuum_pos[1])  , dust_positions)
             # Di chuyển qua từng bước trên đường đi
             for step in path:
                 move_vacuum(vacuum_pos[0], vacuum_pos[1], step[0], step[1])
