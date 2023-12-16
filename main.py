@@ -6,7 +6,11 @@ from PIL import Image, ImageTk
 from collections import deque
 import random
 import time
-from A_star_10_12_nearest_first import *
+from agorithm.A_star_10_12_nearest_first import *
+from agorithm.bfs_in_AI import *
+from agorithm.dfs_in_AI import *
+from agorithm.bfs_AI import *
+from agorithm.dfs_AI import *
 result = None
 dust_positon = None
 table_frame = None  # Biến toàn cục để lưu trữ frame chứa bảng
@@ -56,10 +60,10 @@ def create_table():
 
     global vacuum_image, bg_image, dust_image, wall_image
 
-    vacuum_image = ImageTk.PhotoImage(Image.open("vacuum.png").resize((50, 50), Image.LANCZOS))
-    bg_image = ImageTk.PhotoImage(Image.open("rac.png").resize((30, 30), Image.LANCZOS))
-    dust_image = ImageTk.PhotoImage(Image.open("virus.jpg").resize((50, 50), Image.LANCZOS))
-    wall_image = ImageTk.PhotoImage(Image.open("wall.jpg").resize((50, 50), Image.LANCZOS))
+    vacuum_image = ImageTk.PhotoImage(Image.open("image\\vacuum.png").resize((50, 50), Image.LANCZOS))
+    bg_image = ImageTk.PhotoImage(Image.open("image\\rac.png").resize((30, 30), Image.LANCZOS))
+    dust_image = ImageTk.PhotoImage(Image.open("image\\virus.jpg").resize((50, 50), Image.LANCZOS))
+    wall_image = ImageTk.PhotoImage(Image.open("image\\wall.jpg").resize((50, 50), Image.LANCZOS))
     
     for i in range(num_rows):
         for j in range(num_cols):
@@ -92,7 +96,7 @@ def move_vacuum(old_x, old_y, new_x, new_y):
     update_cell(old_x, old_y, bg_image)  # Đặt lại ô cũ thành nền
     update_cell(new_x, new_y, vacuum_image)  # Đặt máy hút bụi vào ô mới
     
-def clear_table():
+def clear_table(): 
     global table_frame
     # Kiểm tra nếu table_frame đã được tạo, sau đó xóa các widget trong Frame
     if table_frame:
@@ -100,75 +104,135 @@ def clear_table():
             if widget != submit_button:
                 widget.destroy()
                 
-def clean_grid():
+def clean_grid(aaa):
     global vacuum_pos, num_rows, num_cols, result, table_frame
     dust_positions = [(i, j) for i in range(num_rows) for j in range(num_cols) if result['matrix'][i][j] == 2]
     
-    # Vòng lặp qua từng điểm bụi
-    for dust in dust_positions:
-        # Tính toán đường đi bằng A*
-        #start_pos_tuple = tuple(vacuum_pos.values())
+    if(aaa == 1):
+        # Vòng lặp qua từng điểm bụi
+        for dust in dust_positions:
+            # Tính toán đường đi bằng A*
+            #start_pos_tuple = tuple(vacuum_pos.values())
+            vacuum_pos = result['start_position']
+            path = find_path_to_closest_goal(result['matrix'], vacuum_pos  , dust_positions)
+            # Di chuyển qua từng bước trên đường đi
+            for step in path:
+                move_vacuum(vacuum_pos[0], vacuum_pos[1], step[0], step[1])
+                window.update()
+                time.sleep(0.5)
+            
+            # Dọn bụi tại vị trí hiện tại
+            result['matrix'][dust[0]][dust[1]] = 0
+            update_cell(dust[0], dust[1], bg_image)
+        # Cập nhật vị trí máy hút bụi cuối cùng
+        vacuum_pos = {'x': path[-1][1], 'y': path[-1][0]}
+    elif(aaa == 2 or aaa == 3):
+        # Vòng lặp qua từng điểm bụi
         vacuum_pos = result['start_position']
-        path = find_path_to_closest_goal(result['matrix'],vacuum_pos  , dust_positions)
-
+        for dust in dust_positions:
+            #start_pos_tuple = tuple(vacuum_pos.values())
+            if(aaa == 2):
+                path = initialize_bfs(result['matrix'], vacuum_pos  , dust)
+            else:
+                path = initialize_dfs(result['matrix'], vacuum_pos  , dust)
+            # Di chuyển qua từng bước trên đường đi
+            for step in path:
+                move_vacuum(vacuum_pos[0], vacuum_pos[1], step[0], step[1])
+                window.update()
+                time.sleep(0.5)
+            
+            # Dọn bụi tại vị trí hiện tại
+            result['matrix'][dust[0]][dust[1]] = 0
+            update_cell(dust[0], dust[1], bg_image)
+            # Cập nhật vị trí máy hút bụi cuối cùng
+            vacuum_pos = (path[-1][0], path[-1][1])
+            # vacuum_pos = {'x': path[-1][1], 'y': path[-1][0]}
+    
+    else:
+        if(aaa == 4):
+            path = initialize_B(result["matrix"], result["start_position"])
+        else:
+            path = initialize_D(result["matrix"], result["start_position"])
         # Di chuyển qua từng bước trên đường đi
         for step in path:
             move_vacuum(vacuum_pos[0], vacuum_pos[1], step[0], step[1])
             window.update()
             time.sleep(0.5)
-        
-        # Dọn bụi tại vị trí hiện tại
-        result['matrix'][dust[0]][dust[1]] = 0
-        update_cell(dust[0], dust[1], bg_image)
-    
-    # Cập nhật vị trí máy hút bụi cuối cùng
-    vacuum_pos = {'x': path[-1][1], 'y': path[-1][0]}
     
     
-def start_cleaning():
+    
+def start_cleaning_A_star():
     # Bắt đầu quá trình dọn dẹp
-    clean_grid()
+    clean_grid(1)
     
+def start_cleaning_bfs():
+    # Bắt đầu quá trình dọn dẹp
+    clean_grid(2)
     
-# Tạo một cửa sổ giao diện
-window = tk.Tk()
-window.title("Thông tin")
+def start_cleaning_dfs():
+    # Bắt đầu quá trình dọn dẹp
+    clean_grid(3)
 
-# Tạo một LabelFrame với tiêu đề "Nhập thông tin"
-info_frame = tk.LabelFrame(window, text="Nhập thông tin", font=("Arial", 12, "bold"), padx=20, pady=20)
-#info_frame.pack(pady=20)
-info_frame.grid(row=0, column=0, padx=20, pady=20)
+def start_cleaning_b():
+    # Bắt đầu quá trình dọn dẹp
+    clean_grid(4)
+    
+def start_cleaning_d():
+    # Bắt đầu quá trình dọn dẹp
+    clean_grid(5)
+    
 
-# Tạo các Label và Entry box
-label_font = font.Font(family="Arial", size=10)
+def run_application():
+    global row_entry, column_entry, obstacle_entry, dust_entry, window, submit_button
+    # Tạo một cửa sổ giao diện
+    window = tk.Tk()
+    window.title("Thông tin")
 
-column_label = tk.Label(info_frame, text="Nhập số cột:", font=label_font)
-column_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
-column_entry = tk.Entry(info_frame, font=label_font)
-column_entry.grid(row=0, column=1, padx=10, pady=5)
+    # Tạo một LabelFrame với tiêu đề "Nhập thông tin"
+    info_frame = tk.LabelFrame(window, text="Nhập thông tin", font=("Arial", 12, "bold"), padx=20, pady=20)
+    #info_frame.pack(pady=20)
+    info_frame.grid(row=0, column=0, padx=20, pady=20)
 
-row_label = tk.Label(info_frame, text="Nhập số hàng:", font=label_font)
-row_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
-row_entry = tk.Entry(info_frame, font=label_font)
-row_entry.grid(row=1, column=1, padx=10, pady=5)
+    # Tạo các Label và Entry box
+    label_font = font.Font(family="Arial", size=10)
 
-obstacle_label = tk.Label(info_frame, text="Nhập số vật cản:", font=label_font)
-obstacle_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
-obstacle_entry = tk.Entry(info_frame, font=label_font)
-obstacle_entry.grid(row=2, column=1, padx=10, pady=5)
+    column_label = tk.Label(info_frame, text="Nhập số cột:", font=label_font)
+    column_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+    column_entry = tk.Entry(info_frame, font=label_font)
+    column_entry.grid(row=0, column=1, padx=10, pady=5)
 
-dust_row_label = tk.Label(info_frame, text="Nhập số bụi:", font=label_font)
-dust_row_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
-dust_entry = tk.Entry(info_frame, font=label_font)
-dust_entry.grid(row=3, column=1, padx=10, pady=5)
-# Tạo nút "Submit"
-submit_button = tk.Button(window, text="Submit", font=("Arial", 12), bg="#4CAF50", fg="white", relief=tk.RAISED,
-                          command=create_table)
-#submit_button.pack(pady=10)
-submit_button.grid(row=6, column=0, columnspan=2, pady=10)
+    row_label = tk.Label(info_frame, text="Nhập số hàng:", font=label_font)
+    row_label.grid(row=1, column=0, padx=10, pady=5, sticky="w")
+    row_entry = tk.Entry(info_frame, font=label_font)
+    row_entry.grid(row=1, column=1, padx=10, pady=5)
 
-start_cleaning_button = tk.Button(window, text="Start Cleaning",command=start_cleaning)
-start_cleaning_button.grid(row=7, column=0, columnspan=2, pady=10)
+    obstacle_label = tk.Label(info_frame, text="Nhập số vật cản:", font=label_font)
+    obstacle_label.grid(row=2, column=0, padx=10, pady=5, sticky="w")
+    obstacle_entry = tk.Entry(info_frame, font=label_font)
+    obstacle_entry.grid(row=2, column=1, padx=10, pady=5)
+
+    dust_row_label = tk.Label(info_frame, text="Nhập số bụi:", font=label_font)
+    dust_row_label.grid(row=3, column=0, padx=10, pady=5, sticky="w")
+    dust_entry = tk.Entry(info_frame, font=label_font)
+    dust_entry.grid(row=3, column=1, padx=10, pady=5)
+    # Tạo nút "Submit"
+    submit_button = tk.Button(window, text="Submit", font=("Arial", 12), bg="#4CAF50", fg="white", relief=tk.RAISED,
+                            command=create_table)
+    #submit_button.pack(pady=10)
+    submit_button.grid(row=6, column=0, columnspan=2, pady=10)
+
+    start_cleaning_A_star_button = tk.Button(window, text="Start Cleaning A*",command=start_cleaning_A_star)
+    start_cleaning_A_star_button.grid(row=7, column=0, columnspan=2, pady=10)
+    start_cleaning_bfs_button = tk.Button(window, text="Start Cleaning bfs",command=start_cleaning_bfs)
+    start_cleaning_bfs_button.grid(row=8, column=0, columnspan=2, pady=10)
+    start_cleaning_dfs_button = tk.Button(window, text="Start Cleaning dfs",command=start_cleaning_dfs)
+    start_cleaning_dfs_button.grid(row=9, column=0, columnspan=2, pady=10)
+    start_cleaning_b_button = tk.Button(window, text="Start Cleaning BFS full",command=start_cleaning_b)
+    start_cleaning_b_button.grid(row=10, column=0, columnspan=2, pady=10)
+    start_cleaning_d_button = tk.Button(window, text="Start Cleaning DFS full",command=start_cleaning_d)
+    start_cleaning_d_button.grid(row=11, column=0, columnspan=2, pady=10)
 
 
-window.mainloop()
+    window.mainloop()
+
+run_application()
