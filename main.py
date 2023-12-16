@@ -41,7 +41,8 @@ def random_matrix (num_rows, num_cols,num_obs,num_dust):
     }
 
 def create_table():
-    global num_cols,num_rows,num_obs,num_dust,table_frame,result,vacuum_pos,dust_positions
+    global num_cols,num_rows,num_obs,num_dust,table_frame,result,vacuum_pos,dust_positions, kt
+    kt = 0
     num_rows = int(row_entry.get())
     num_cols = int(column_entry.get())
     num_obs = int(obstacle_entry.get())  # Số lượng vật cản
@@ -58,12 +59,13 @@ def create_table():
     table_frame = tk.Frame(window)
     table_frame.grid(row=0, column=1, columnspan=2)
 
-    global vacuum_image, bg_image, dust_image, wall_image
+    global vacuum_image, bg_image, dust_image, wall_image, visited_image
 
     vacuum_image = ImageTk.PhotoImage(Image.open("image\\vacuum.png").resize((50, 50), Image.LANCZOS))
     bg_image = ImageTk.PhotoImage(Image.open("image\\rac.png").resize((30, 30), Image.LANCZOS))
     dust_image = ImageTk.PhotoImage(Image.open("image\\virus.jpg").resize((50, 50), Image.LANCZOS))
     wall_image = ImageTk.PhotoImage(Image.open("image\\wall.jpg").resize((50, 50), Image.LANCZOS))
+    visited_image = ImageTk.PhotoImage(Image.open("image\\rac.jpg").resize((50, 50), Image.LANCZOS))
     
     for i in range(num_rows):
         for j in range(num_cols):
@@ -93,7 +95,7 @@ def move_vacuum(old_x, old_y, new_x, new_y):
     # vacuum_pos[1] = new_y
     vacuum_pos = (new_x, new_y)
     # Cập nhật giao diện người dùng
-    update_cell(old_x, old_y, bg_image)  # Đặt lại ô cũ thành nền
+    update_cell(old_x, old_y, visited_image)  # Đặt lại ô cũ thành nền
     update_cell(new_x, new_y, vacuum_image)  # Đặt máy hút bụi vào ô mới
     
 def clear_table(): 
@@ -105,7 +107,8 @@ def clear_table():
                 widget.destroy()
                 
 def clean_grid(aaa):
-    global vacuum_pos, num_rows, num_cols, result, table_frame
+    global vacuum_pos, num_rows, num_cols, result, table_frame, kt
+    kt = 1
     dust_positions = [(i, j) for i in range(num_rows) for j in range(num_cols) if result['matrix'][i][j] == 2]
     
     if(aaa == 1):
@@ -120,10 +123,12 @@ def clean_grid(aaa):
                 move_vacuum(vacuum_pos[0], vacuum_pos[1], step[0], step[1])
                 window.update()
                 time.sleep(0.5)
+                if(kt == 0):
+                    return None
             
             # Dọn bụi tại vị trí hiện tại
             result['matrix'][dust[0]][dust[1]] = 0
-            update_cell(dust[0], dust[1], bg_image)
+            update_cell(dust[0], dust[1], visited_image)
         # Cập nhật vị trí máy hút bụi cuối cùng
         vacuum_pos = {'x': path[-1][1], 'y': path[-1][0]}
     elif(aaa == 2 or aaa == 3):
@@ -140,10 +145,12 @@ def clean_grid(aaa):
                 move_vacuum(vacuum_pos[0], vacuum_pos[1], step[0], step[1])
                 window.update()
                 time.sleep(0.5)
+                if(kt == 0):
+                    return None
             
             # Dọn bụi tại vị trí hiện tại
             result['matrix'][dust[0]][dust[1]] = 0
-            update_cell(dust[0], dust[1], bg_image)
+            update_cell(dust[0], dust[1], visited_image)
             # Cập nhật vị trí máy hút bụi cuối cùng
             vacuum_pos = (path[-1][0], path[-1][1])
             # vacuum_pos = {'x': path[-1][1], 'y': path[-1][0]}
@@ -158,32 +165,41 @@ def clean_grid(aaa):
             move_vacuum(vacuum_pos[0], vacuum_pos[1], step[0], step[1])
             window.update()
             time.sleep(0.5)
+            if(kt == 0):
+                return None
     
     
     
 def start_cleaning_A_star():
+    print("Start Cleaning A")
     # Bắt đầu quá trình dọn dẹp
     clean_grid(1)
     
 def start_cleaning_bfs():
+    print("Start Cleaning bfs")
     # Bắt đầu quá trình dọn dẹp
     clean_grid(2)
     
 def start_cleaning_dfs():
+    print("Start Cleaning dfs")
     # Bắt đầu quá trình dọn dẹp
     clean_grid(3)
 
 def start_cleaning_b():
+    print("Start Cleaning BFS full")
     # Bắt đầu quá trình dọn dẹp
     clean_grid(4)
     
 def start_cleaning_d():
+    print("Start Cleaning DFS full")
     # Bắt đầu quá trình dọn dẹp
     clean_grid(5)
     
 
 def run_application():
-    global row_entry, column_entry, obstacle_entry, dust_entry, window, submit_button
+    print("Start Application")
+    global row_entry, column_entry, obstacle_entry, dust_entry, window, submit_button, kt
+    kt = 0
     # Tạo một cửa sổ giao diện
     window = tk.Tk()
     window.title("Thông tin")

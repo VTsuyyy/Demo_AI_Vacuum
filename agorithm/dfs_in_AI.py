@@ -35,7 +35,6 @@ def initialize_D(ta, st):
     col = st[1]
     num_rows = len(ta)
     num_cols = len(ta[0])
-    print(num_rows)
     step = []
     near = [[1, 0], [0, 1], [-1, 0], [0, -1]]
     mark = ['v', '>', '^', '<']

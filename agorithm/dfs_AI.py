@@ -20,7 +20,6 @@ def move(r, c):
             if(move(r + i[0], c + i[1])):
                 step.append([r, c])
                 return True
-
     return False
         
       
