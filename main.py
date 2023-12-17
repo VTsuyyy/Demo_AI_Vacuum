@@ -7,10 +7,12 @@ from collections import deque
 import random
 import time
 from agorithm.A_star_10_12_nearest_first import *
+from agorithm.bfs_in_AI1 import *
 from agorithm.bfs_in_AI import *
 from agorithm.dfs_in_AI import *
 from agorithm.bfs_AI import *
 from agorithm.dfs_AI import *
+from agorithm.dfs_AI1 import *
 result = None
 dust_positon = None
 table_frame = None  # Biến toàn cục để lưu trữ frame chứa bảng
@@ -58,15 +60,17 @@ def create_table():
         clear_table()
 
     table_frame = tk.Frame(window)
-    table_frame.grid(row=0, column=1, columnspan=2)
+    table_frame.grid(row=0, column=2, columnspan=2)
 
     global vacuum_image, bg_image, dust_image, wall_image, visited_image
-
-    vacuum_image = ImageTk.PhotoImage(Image.open("image\\vacuum.png").resize((50, 50), Image.LANCZOS))
-    bg_image = ImageTk.PhotoImage(Image.open("image\\rac.png").resize((30, 30), Image.LANCZOS))
-    dust_image = ImageTk.PhotoImage(Image.open("image\\virus.jpg").resize((50, 50), Image.LANCZOS))
-    wall_image = ImageTk.PhotoImage(Image.open("image\\wall.jpg").resize((50, 50), Image.LANCZOS))
-    visited_image = ImageTk.PhotoImage(Image.open("image\\rac.jpg").resize((50, 50), Image.LANCZOS))
+    global size_image
+    size_image = min(900 // num_rows, 1350 // num_cols)
+    
+    vacuum_image = ImageTk.PhotoImage(Image.open("image\\vacuum.png").resize((size_image, size_image), Image.LANCZOS))
+    bg_image = ImageTk.PhotoImage(Image.open("image\\rac.png").resize((size_image, size_image), Image.LANCZOS))
+    dust_image = ImageTk.PhotoImage(Image.open("image\\virus.jpg").resize((size_image, size_image), Image.LANCZOS))
+    wall_image = ImageTk.PhotoImage(Image.open("image\\wall.jpg").resize((size_image, size_image), Image.LANCZOS))
+    visited_image = ImageTk.PhotoImage(Image.open("image\\rac.jpg").resize((size_image, size_image), Image.LANCZOS))
     
     for i in range(num_rows):
         for j in range(num_cols):
@@ -79,9 +83,9 @@ def create_table():
             else:
                 image = bg_image
 
-            cell_label = tk.Label(table_frame, image=image, borderwidth=0.5, relief='groove', width=50, height=50, bg='lightblue')
+            cell_label = tk.Label(table_frame, image=image, borderwidth=0.1, relief='groove', width=size_image, height=size_image, bg='lightblue')
             cell_label.image = image
-            cell_label.grid(row=i, column=j, padx=5, pady=5)
+            cell_label.grid(row=i, column=j, padx=1, pady=1)
             cell_label.bind('<Button-1>', lambda onRightClick, row=i, col=j: update_vacuum_position(row, col))
             cell_label.bind('<Button-2>', lambda onRightClick, row=i, col=j: up_wall(row, col))
             cell_label.bind('<Button-3>', lambda onRightClick, row=i, col=j: up_virus(row, col))
@@ -96,16 +100,16 @@ def update_cell(row, col, image):
 def up_wall(r, c):
     global table_frame
     result['matrix'][r][c] = 1
-    new_label = tk.Label(table_frame, image=wall_image, borderwidth=0.5, relief='groove', width=50, height=50, bg='lightblue')
+    new_label = tk.Label(table_frame, image=wall_image, borderwidth=0.1, relief='groove', width=size_image, height=size_image, bg='lightblue')
     # new_label.image = dust_image
-    new_label.grid(row=r, column=c, padx=5, pady=5)
+    new_label.grid(row=r, column=c, padx=1, pady=1)
     
 def up_virus(r, c):
     global table_frame, dust_image
     result['matrix'][r][c] = 2
-    new_label = tk.Label(table_frame, image=dust_image, borderwidth=0.5, relief='groove', width=50, height=50, bg='lightblue')
+    new_label = tk.Label(table_frame, image=dust_image, borderwidth=0.1, relief='groove', width=size_image, height=size_image, bg='lightblue')
     # new_label.image = dust_image
-    new_label.grid(row=r, column=c, padx=5, pady=5)
+    new_label.grid(row=r, column=c, padx=1, pady=1)
     
 def update_vacuum_position(new_row, new_col):
     global  result
@@ -136,7 +140,8 @@ def clean_grid(aaa):
     global vacuum_pos, num_rows, num_cols, result, table_frame, kt
     kt = 1
     dust_positions = [(i, j) for i in range(num_rows) for j in range(num_cols) if result['matrix'][i][j] == 2]
-    
+    num_speed = max(num_rows, num_cols)
+    num_speed = num_speed ** 1.3
     if(aaa == 1):
         # Vòng lặp qua từng điểm bụi
         for dust in dust_positions:
@@ -148,7 +153,7 @@ def clean_grid(aaa):
             for step in path:
                 move_vacuum(vacuum_pos[0], vacuum_pos[1], step[0], step[1])
                 window.update()
-                time.sleep(0.5)
+                time.sleep(2 / num_speed)
                 if(kt == 0):
                     return None
             
@@ -165,12 +170,12 @@ def clean_grid(aaa):
             if(aaa == 2):
                 path = initialize_bfs(result['matrix'], vacuum_pos  , dust)
             else:
-                path = initialize_dfs(result['matrix'], vacuum_pos  , dust)
+                path = initialize_dfs1(result['matrix'], vacuum_pos  , dust)
             # Di chuyển qua từng bước trên đường đi
             for step in path:
                 move_vacuum(vacuum_pos[0], vacuum_pos[1], step[0], step[1])
                 window.update()
-                time.sleep(0.5)
+                time.sleep(2 / num_speed)
                 if(kt == 0):
                     return None
             
@@ -183,14 +188,14 @@ def clean_grid(aaa):
     
     else:
         if(aaa == 4):
-            path = initialize_B(result["matrix"], result["start_position"])
+            path = initialize_B1(result["matrix"], result["start_position"])
         else:
             path = initialize_D(result["matrix"], result["start_position"])
         # Di chuyển qua từng bước trên đường đi
         for step in path:
             move_vacuum(vacuum_pos[0], vacuum_pos[1], step[0], step[1])
             window.update()
-            time.sleep(0.5)
+            time.sleep(0.7 / num_speed)
             if(kt == 0):
                 return None
     
@@ -230,8 +235,11 @@ def run_application():
     window = tk.Tk()
     window.title("Thông tin")
 
+    
+    window1 = tk.Frame(window)
+    window1.grid(row=0, column=0, columnspan=2)
     # Tạo một LabelFrame với tiêu đề "Nhập thông tin"
-    info_frame = tk.LabelFrame(window, text="Nhập thông tin", font=("Arial", 12, "bold"), padx=20, pady=20)
+    info_frame = tk.LabelFrame(window1, text="Nhập thông tin", font=("Arial", 12, "bold"), padx=20, pady=20)
     #info_frame.pack(pady=20)
     info_frame.grid(row=0, column=0, padx=20, pady=20)
 
@@ -258,20 +266,20 @@ def run_application():
     dust_entry = tk.Entry(info_frame, font=label_font)
     dust_entry.grid(row=3, column=1, padx=10, pady=5)
     # Tạo nút "Submit"
-    submit_button = tk.Button(window, text="Submit", font=("Arial", 12), bg="#4CAF50", fg="white", relief=tk.RAISED,
+    submit_button = tk.Button(window1, text="Submit", font=("Arial", 12), bg="#4CAF50", fg="white", relief=tk.RAISED,
                             command=create_table)
     #submit_button.pack(pady=10)
     submit_button.grid(row=6, column=0, columnspan=2, pady=10)
 
-    start_cleaning_A_star_button = tk.Button(window, text="Start Cleaning A*",command=start_cleaning_A_star)
+    start_cleaning_A_star_button = tk.Button(window1, text="Start Cleaning A*",command=start_cleaning_A_star)
     start_cleaning_A_star_button.grid(row=7, column=0, columnspan=2, pady=10)
-    start_cleaning_bfs_button = tk.Button(window, text="Start Cleaning bfs",command=start_cleaning_bfs)
+    start_cleaning_bfs_button = tk.Button(window1, text="Start Cleaning bfs",command=start_cleaning_bfs)
     start_cleaning_bfs_button.grid(row=8, column=0, columnspan=2, pady=10)
-    start_cleaning_dfs_button = tk.Button(window, text="Start Cleaning dfs",command=start_cleaning_dfs)
+    start_cleaning_dfs_button = tk.Button(window1, text="Start Cleaning dfs",command=start_cleaning_dfs)
     start_cleaning_dfs_button.grid(row=9, column=0, columnspan=2, pady=10)
-    start_cleaning_b_button = tk.Button(window, text="Start Cleaning BFS full",command=start_cleaning_b)
+    start_cleaning_b_button = tk.Button(window1, text="Start Cleaning BFS full",command=start_cleaning_b)
     start_cleaning_b_button.grid(row=10, column=0, columnspan=2, pady=10)
-    start_cleaning_d_button = tk.Button(window, text="Start Cleaning DFS full",command=start_cleaning_d)
+    start_cleaning_d_button = tk.Button(window1, text="Start Cleaning DFS full",command=start_cleaning_d)
     start_cleaning_d_button.grid(row=11, column=0, columnspan=2, pady=10)
 
 

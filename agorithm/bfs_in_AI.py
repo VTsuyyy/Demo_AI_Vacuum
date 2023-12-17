@@ -1,63 +1,60 @@
 import time
 
-def check(r, c, tabl):
-    global num_cols, num_rows
+def check(r, c):
+    global table, num_cols, num_rows
     if(r < 0 or r == num_rows or c < 0 or c == num_cols):
         return False
-    if(tabl[r][c] == '.'):
+    if(table[r][c] == '.'):
         return True
     else:
         return False
 
-def ste(que1):
-    global step
-    st = []
-    # print(que)
-    st.append([que1[-1][0], que1[-1][1]])
-    k = que1[-1][2]
-    while(k != -1):
-        st.append([que1[k][0], que1[k][1]])
-        k = que1[k][2]
-    st.reverse()
-    print(st)
-    for i in st:
-        step.append(i)
-    
+def new_position(r, c):
+    global row, col, table, stepp, prerow, precol
+    prerow = row
+    precol = col
+    row = r
+    col = c
+    table[row][col] = 'S'
+    if(prerow != row or precol != col):
+        stepp.append([row, col])    
 
-def move(sta, dus):
-    global table, near
-    tabl = []
-    que1 = []
-    que1.append([sta[0], sta[1], -1])
-    for i in table:
-        tmp = []
-        for j in i:
-            tmp.append(j)
-        tabl.append(tmp)
-    p = 0
-    k = 0
-    while(p <= k):
-        a = [que1[p][0], que1[p][1]]
-        for i in near:
-            if(check(a[0] + i[0], a[1] + i[1], tabl)):
-                k += 1
-                que1.append([a[0] + i[0], a[1] + i[1], p])
-                tabl[a[0] + i[0]][a[1] + i[1]] = 'S'
-                if(que1[k][0] == dus[0] and que1[k][1] == dus[1]):
-                    ste(que1)
-                    return None
-        p += 1
-        
-      
+def bfs(step):
+    global near, table, row, col, back, next
+    sl = 0
+    step1 = []
+    for i in step:
+        new_position(i[0], i[1])
+        kt = 1
+        for j in near:
+            if(check(i[0] + j[0], i[1] + j[1])):
+                new_position(i[0] + j[0], i[1] + j[1])
+                sl += 1
+                step1.append([row, col])
+                kt = 1
+            elif(kt == 1):
+                # table[i[0] + j[0]][i[1] + j[1]] = 'S'
+                new_position(i[0], i[1])
+                step1.append([row, col])
+                kt = 0
+            new_position(i[0], i[1])
+    # print(back + next)
+    if(sl > 0):
+        new_position(step1[0][0], step1[0][1])
+        step1.append([step1[0][0], step1[0][1]])
+        # print(step1)
+        bfs(step1)
+         
+
 def initialize_B(ta, st):
-    global row, col, num_cols, num_rows, table, step, near, mark
-
+    global row, col, num_cols, num_rows, table, step, near, mark, back, next, stepp, prerow, precol
     row = st[0]
     col = st[1]
     num_rows = len(ta)
     num_cols = len(ta[0])
     step = []
-    near = [[1, 0], [0, 1], [-1, 0], [0, -1]]
+    # near = [[1, 0], [0, 1], [-1, 0], [0, -1]]
+    near = [[1, 0, 0], [1, 1, 1], [0, 1, 2], [-1, 1, 3], [-1, 0, 4], [-1, -1, 5], [0, -1, 6], [1, -1, 7]]
     mark = ['v', '>', '^', '<']
     table = []
     for i in ta:
@@ -68,13 +65,12 @@ def initialize_B(ta, st):
             else:
                 tmp.append('.')
         table.append(tmp)
-    for i in range(0, num_rows):
-        for j in range(0, num_cols):
-            print([i,j])
-            if(table[i][j] != 'X'):
-                move(st, [i, j])
-                st = [i, j]
-    # print_table()
-    # step.reverse()
-    # print(step)
-    return step
+    step = [[row, col]]
+    stepp = [[row, col]]
+    back = []
+    next = []
+    next.append([step[0][0], step[0][1]])
+    table[row][col] = 'S'
+    bfs(step)
+    return stepp
+
