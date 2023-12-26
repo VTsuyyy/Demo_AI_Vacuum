@@ -286,3 +286,5 @@ def run_application():
     window.mainloop()
 
 run_application()
+
+print("cc")
